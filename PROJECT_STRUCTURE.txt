@@ -1,0 +1,229 @@
+NEWS NEUTRALIZER - PROJECT STRUCTURE
+=====================================
+
+📁 news-neutralizer/
+│
+├── 📄 QUICKSTART.md ........................... Get started in 5 minutes
+├── 📄 README.md .............................. Full documentation
+├── 📄 FEATURES.md ............................ Complete features list
+├── 📄 IMPLEMENTATION_SUMMARY.md .............. Technical architecture
+├── 📄 TESTING_GUIDE.md ....................... Testing procedures
+├── 📄 PROJECT_COMPLETE.md ................... Project overview
+├── 📄 PROJECT_STRUCTURE.txt ................. This file
+│
+├── 🐍 PYTHON CODE (35 KB)
+│   ├── app.py ............................... Main Streamlit application (14 KB)
+│   │   ├── setup_sidebar()           - Configure API keys & settings
+│   │   ├── analyze_article()         - Run bias analysis
+│   │   ├── display_analysis_results()- Show results in tabs
+│   │   └── main()                   - Main app flow
+│   │
+│   ├── llm_handlers.py ...................... Multi-LLM provider handlers (12 KB)
+│   │   ├── LLMHandler (abstract)    - Base class for all providers
+│   │   ├── ClaudeHandler            - Anthropic Claude implementation
+│   │   ├── OpenAIHandler            - OpenAI GPT-4 implementation
+│   │   ├── GeminiHandler            - Google Gemini implementation
+│   │   └── get_llm_handler()        - Factory function
+│   │
+│   ├── database.py .......................... Supabase integration (6.7 KB)
+│   │   ├── SupabaseDB.__init__()    - Connect to Supabase
+│   │   ├── save_analysis()          - Store analysis results
+│   │   ├── get_analysis_history()   - Retrieve past analyses
+│   │   ├── save_detected_biases()   - Store bias records
+│   │   ├── get_statistics()         - Analytics data
+│   │   └── (+ 5 more methods)
+│   │
+│   └── utils.py ............................ Utility functions (3 KB)
+│       ├── extract_article_from_url() - Web scraping
+│       ├── validate_article_text()  - Input validation
+│       ├── calculate_bias_score()   - Bias aggregation
+│       ├── categorize_biases()      - Group by type
+│       └── (+ 3 more functions)
+│
+├── ⚙️  CONFIGURATION
+│   ├── .env ................................ Supabase credentials (auto-configured)
+│   ├── .streamlit/config.toml ............. Streamlit UI settings
+│   └── requirements.txt ................... Python dependencies (9 packages)
+│
+├── 🗄️  DATABASE SCHEMA (Supabase)
+│   ├── analyses ............................ Core analysis records
+│   │   ├── id (uuid, PK)
+│   │   ├── session_id (text, indexed)
+│   │   ├── original_text (text)
+│   │   ├── neutralized_text (text)
+│   │   ├── llm_provider (text)
+│   │   ├── bias_score (float)
+│   │   ├── total_biases_detected (int)
+│   │   └── created_at (timestamptz)
+│   │
+│   ├── detected_biases .................... Individual bias records
+│   │   ├── id (uuid, PK)
+│   │   ├── analysis_id (uuid, FK)
+│   │   ├── original_term (text)
+│   │   ├── neutral_term (text)
+│   │   ├── bias_category (text)
+│   │   ├── confidence (float 0-1)
+│   │   └── reasoning (text)
+│   │
+│   ├── perspective_variations ............. Generated perspectives
+│   │   ├── id (uuid, PK)
+│   │   ├── analysis_id (uuid, FK)
+│   │   ├── perspective_type (text: left/neutral/right)
+│   │   ├── generated_text (text)
+│   │   └── created_at (timestamptz)
+│   │
+│   └── user_preferences ................... User settings
+│       ├── id (uuid, PK)
+│       ├── session_id (text, unique)
+│       ├── preferred_llm (text)
+│       ├── temperature (float 0-2)
+│       ├── theme (text)
+│       └── updated_at (timestamptz)
+│
+└── 📚 DOCUMENTATION TREE
+    ├── Getting Started
+    │   └── QUICKSTART.md .................. 5-minute setup
+    │
+    ├── User Guides
+    │   ├── README.md ..................... Complete guide
+    │   └── FEATURES.md ................... Features list
+    │
+    ├── Technical Docs
+    │   ├── IMPLEMENTATION_SUMMARY.md ..... Architecture
+    │   └── PROJECT_STRUCTURE.txt ........ This file
+    │
+    └── Development
+        ├── TESTING_GUIDE.md ............. 15 test scenarios
+        └── PROJECT_COMPLETE.md ......... Project overview
+
+
+DATA FLOW DIAGRAM
+=================
+
+User Input (Text or URL)
+      ↓
+    validate_article_text()
+      ↓
+   get_llm_handler(provider)
+      ↓
+   ┌─────────────────────────────────┐
+   │  Chain-of-Thought Analysis      │
+   │                                 │
+   │  1. detect_biases()             │
+   │     → Returns: biases[], score  │
+   │                                 │
+   │  2. neutralize_article()        │
+   │     → Returns: neutralized text │
+   │                                 │
+   │  3. generate_perspective()      │
+   │     → Returns: left/right text  │
+   └─────────────────────────────────┘
+      ↓
+   save_analysis() → Supabase
+   save_detected_biases() → Supabase
+   save_perspective() → Supabase
+      ↓
+   display_analysis_results()
+      │
+      ├── Tab: Original
+      ├── Tab: Neutralized
+      ├── Tab: Bias Analysis
+      └── Tab: Perspectives
+
+
+FEATURE OVERVIEW
+================
+
+CORE FEATURES
+• Bias Detection (5 categories)
+• Article Neutralization
+• Multi-Perspective Generation (left/neutral/right)
+• Multi-LLM Support (Claude, OpenAI, Gemini)
+
+INPUT/OUTPUT
+• Text Paste Input
+• URL Extraction
+• Download Results
+• Copy to Clipboard
+
+ANALYSIS
+• Bias Scoring (0-100)
+• Confidence Scoring (per bias)
+• Bias Categorization
+• Reasoning Explanation
+
+DATABASE
+• Analysis History
+• Perspective Storage
+• User Preferences
+• Session-Based Access Control
+
+SETTINGS
+• API Key Configuration
+• Provider Selection
+• Temperature Tuning
+• Theme Selection
+• Connection Testing
+
+
+QUICK REFERENCE
+===============
+
+To Run:
+  pip install -r requirements.txt
+  streamlit run app.py
+
+To Get Started:
+  1. Open browser → http://localhost:8501
+  2. Paste API key in sidebar
+  3. Click "Test Selected Provider"
+  4. Paste article or URL
+  5. Click "Analyze Article"
+  6. View results in tabs
+
+Supported Providers:
+  • Claude (Anthropic): claude-3-5-sonnet
+  • OpenAI: gpt-4-turbo
+  • Gemini (Google): gemini-pro
+
+Database:
+  • Supabase (PostgreSQL)
+  • Pre-configured in .env
+  • RLS policies enabled
+  • Session-based access control
+
+Documentation:
+  • QUICKSTART.md - 5 minutes to start
+  • README.md - Complete guide
+  • TESTING_GUIDE.md - How to test
+
+
+FILE SIZES
+==========
+
+Python Code:
+  app.py ........................... 14 KB
+  llm_handlers.py .................. 12 KB
+  database.py ...................... 6.7 KB
+  utils.py ......................... 3 KB
+  Subtotal ......................... 36 KB
+
+Documentation:
+  IMPLEMENTATION_SUMMARY.md ........ 14 KB
+  TESTING_GUIDE.md ................. 12 KB
+  FEATURES.md ...................... 11 KB
+  README.md ........................ 6.7 KB
+  QUICKSTART.md .................... 3.2 KB
+  PROJECT_COMPLETE.md .............. 8 KB
+  Subtotal ......................... 55 KB
+
+Configuration:
+  requirements.txt ................. 0.2 KB
+  .env ............................. 0.3 KB
+  .streamlit/config.toml ........... 0.2 KB
+  Subtotal ......................... 0.7 KB
+
+TOTAL: ~92 KB
+
+
+STATUS: ✅ COMPLETE AND READY TO USE
